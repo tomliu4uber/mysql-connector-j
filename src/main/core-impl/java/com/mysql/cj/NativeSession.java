@@ -746,7 +746,9 @@ public class NativeSession extends CoreSession implements Serializable {
                 queryBuf.append(", @@lower_case_table_names AS lower_case_table_names");
                 queryBuf.append(", @@max_allowed_packet AS max_allowed_packet");
                 queryBuf.append(", @@net_write_timeout AS net_write_timeout");
-                queryBuf.append(", @@performance_schema AS performance_schema");
+                if (this.propertySet.getProperty("no_performance_schema") == null) {
+                    queryBuf.append(", @@performance_schema AS performance_schema");
+                }
                 if (!versionMeetsMinimum(8, 0, 3)) {
                     queryBuf.append(", @@query_cache_size AS query_cache_size");
                     queryBuf.append(", @@query_cache_type AS query_cache_type");
@@ -965,7 +967,8 @@ public class NativeSession extends CoreSession implements Serializable {
         try {
             String processHost = null;
 
-            String ps = this.protocol.getServerSession().getServerVariable("performance_schema");
+            String ps = this.propertySet.getProperty("no_performance_schema") == null ? this.protocol.getServerSession().getServerVariable("performance_schema")
+                    : null;
 
             NativePacketPayload resultPacket = versionMeetsMinimum(5, 6, 0) // performance_schema.threads in MySQL 5.5 does not contain PROCESSLIST_HOST column
                     && ps != null && ("1".contentEquals(ps) || "ON".contentEquals(ps))
